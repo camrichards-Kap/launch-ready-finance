@@ -1,0 +1,29 @@
+name: Fetch site
+on:
+  workflow_dispatch:
+    inputs:
+      url:
+        description: Public URL of the built index.html
+        required: true
+      sha256:
+        description: Expected SHA-256 of the file
+        required: true
+permissions:
+  contents: write
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download
+        run: |
+          curl -fsSL -A "Mozilla/5.0" "${{ inputs.url }}" -o index.html
+          echo "${{ inputs.sha256 }}  index.html" | sha256sum -c -
+          head -c 120 index.html; echo
+      - name: Commit
+        run: |
+          git config user.name "launch-ready-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add index.html
+          git commit -m "Update Launch Ready Finance site" || echo "no change"
+          git push
